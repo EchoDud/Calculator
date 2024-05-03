@@ -1,0 +1,23 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Calculator</title>
+</head>
+<body>
+    <h1>Calculator</h1>
+    <form method="post" action="/Home/Calculate">
+        <input type="text" name="expression" required />
+        <button type="submit">Calculate</button>
+    </form>
+    <h2>History</h2>
+    <ul>
+        @foreach (var item in ViewBag.History)
+        {
+            <li>@item.Expression = @item.Result</li>
+        }
+    </ul>
+</body>
+</html>
