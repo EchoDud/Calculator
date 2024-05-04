@@ -9,10 +9,24 @@ namespace Calculator.Controllers
     {
         private static List<Calculation> history = new List<Calculation>();
         private static int nextId = 1;
+        private readonly MongoDBService _mongoDBService;
+
+        public HomeController(MongoDBService mongoDBService)
+        {
+            _mongoDBService = mongoDBService;
+        }
 
         public IActionResult Index()
         {
-            ViewBag.History = history;
+            ViewBag.History = _mongoDBService.GetCalculations();
+            if (TempData["result"] != null)
+            {
+                ViewBag.Result = TempData["result"];
+            }
+            if (TempData["error"] != null)
+            {
+                ViewBag.Error = TempData["error"];
+            }
             return View();
         }
 
@@ -21,22 +35,59 @@ namespace Calculator.Controllers
         {
             try
             {
-                object computationResult = new DataTable().Compute(expression, null);
-                double result = Convert.ToDouble(computationResult, CultureInfo.InvariantCulture);
-                var calc = new Calculation
+                double result = EvaluateExpression(expression);
+                var calculation = new Calculation
                 {
-                    Id = nextId++,
                     Expression = expression,
                     Result = result
                 };
-                history.Add(calc);
+                _mongoDBService.AddCalculation(calculation);
+                TempData["result"] = result.ToString();
             }
             catch (Exception ex)
-            {                
-                ViewBag.Error = "Invalid expression or internal error.";
+            {
+                TempData["error"] = "Invalid expression or internal error: " + ex.Message;
             }
 
             return RedirectToAction("Index");
+        }
+
+        private double EvaluateExpression(string expression)
+        {
+            var evaluator = new NCalc.Expression(expression);
+            evaluator.EvaluateFunction += (name, args) =>
+            {
+                switch (name.ToLower())
+                {
+                    case "sin":
+                        args.Result = Math.Sin(Convert.ToDouble(args.Parameters[0].Evaluate()));
+                        break;
+                    case "cos":
+                        args.Result = Math.Cos(Convert.ToDouble(args.Parameters[0].Evaluate()));
+                        break;
+                    case "tan":
+                        args.Result = Math.Tan(Convert.ToDouble(args.Parameters[0].Evaluate()));
+                        break;
+                    case "log":
+                        args.Result = Math.Log10(Convert.ToDouble(args.Parameters[0].Evaluate()));
+                        break;
+                    case "ln":
+                        args.Result = Math.Log(Convert.ToDouble(args.Parameters[0].Evaluate()));
+                        break;
+                }
+            };
+            return Convert.ToDouble(evaluator.Evaluate());
+        }
+
+        private void SaveCalculationToDatabase(string expression, double result)
+        {
+            var calculation = new Calculation
+            {
+                Expression = expression,
+                Result = result
+            };
+            _mongoDBService.AddCalculation(calculation);
+            Console.WriteLine("Saved calculation: " + expression + " = " + result);
         }
     }
 }

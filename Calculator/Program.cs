@@ -6,6 +6,7 @@ namespace Calculator
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddControllersWithViews(); // Enable MVC
+            builder.Services.AddSingleton<MongoDBService>();
 
             var app = builder.Build();
             app.UseStaticFiles();

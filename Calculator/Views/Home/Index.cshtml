@@ -14,9 +14,16 @@
     </form>
     <h2>History</h2>
     <ul>
-        @foreach (var item in ViewBag.History)
+        @if (ViewBag.History != null)
         {
-            <li>@item.Expression = @item.Result</li>
+            foreach (var item in ViewBag.History)
+            {
+                <li>@item.Expression = @item.Result</li>
+            }
+        }
+        else
+        {
+            <li>No history available.</li>
         }
     </ul>
 </body>
