@@ -78,16 +78,6 @@ namespace Calculator.Controllers
             };
             return Convert.ToDouble(evaluator.Evaluate());
         }
-
-        private void SaveCalculationToDatabase(string expression, double result)
-        {
-            var calculation = new Calculation
-            {
-                Expression = expression,
-                Result = result
-            };
-            _mongoDBService.AddCalculation(calculation);
-            Console.WriteLine("Saved calculation: " + expression + " = " + result);
-        }
+        
     }
 }
